@@ -1,8 +1,9 @@
-# Skill Swap Platform – Odoo Hackathon 2025
+# Odoo Hackathon 2025
+### 1. Skill Swap Platform
 
 ### Team members
-- Shruti Jha - TL - 
--Aarushi Sinha - 
+- Shruti Jha - TL - shrutijha1219@gmail.com
+- Aarushi Sinha - aarushisinha0303@gmail.com
 
 ### Problem chosen
 Skill Swap Platform (Beginner‑friendly). See feature list in official brief.
