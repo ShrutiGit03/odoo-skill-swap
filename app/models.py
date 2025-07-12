@@ -48,4 +48,54 @@ class User(db.Model, UserMixin):
             return 0
         return sum(r.rating for r in self.ratings_received) / len(self.ratings_received)
 
-# ... (other models from previous implementation remain the same) ...
+class SkillOffered(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    proficiency = db.Column(db.String(50))
+    is_approved = db.Column(db.Boolean, default=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class SkillWanted(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    is_approved = db.Column(db.Boolean, default=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class Availability(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    day = db.Column(db.String(10), nullable=False)  # 'Monday', 'Tuesday', etc.
+    time_range = db.Column(db.String(50), nullable=False)  # 'Morning', 'Afternoon', 'Evening'
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class SwapRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    offered_skill_id = db.Column(db.Integer, db.ForeignKey('skill_offered.id'), nullable=False)
+    wanted_skill_id = db.Column(db.Integer, db.ForeignKey('skill_wanted.id'), nullable=False)
+    message = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'accepted', 'rejected', 'cancelled'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def rating_given(self, user_id):
+        return Rating.query.filter_by(swap_id=self.id, rater_id=user_id).first() is not None
+
+class Rating(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    swap_id = db.Column(db.Integer, db.ForeignKey('swap_request.id'), nullable=False)
+    rater_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rated_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)  # 1-5
+    comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class AdminLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action = db.Column(db.String(50), nullable=False)  # 'user_banned', 'skill_approved', etc.
+    target_id = db.Column(db.Integer)  # ID of affected user/skill
+    details = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utccnow)

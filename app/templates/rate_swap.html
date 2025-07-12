@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Rate Swap{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Rate Your Swap Experience</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <img src="{{ url_for('static', filename='profile_pics/' + other_user.profile_pic) }}" 
+                         class="rounded-circle mb-2" width="80" height="80" alt="User profile picture">
+                    <h4>{{ other_user.username }}</h4>
+                    <p class="text-muted">Swap completed on {{ swap.updated_at.strftime('%B %d, %Y') }}</p>
+                </div>
+                
+                <form method="POST" action="{{ url_for('main.rate_swap', swap_id=swap.id) }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4 text-center">
+                        <h6 class="mb-3">How would you rate this swap?</h6>
+                        <div class="rating-stars mb-2" style="font-size: 2rem;">
+                            {% for i in range(1, 6) %}
+                            <i class="bi bi-star-fill rating-star {% if form.rating.data|int == i %}text-warning{% else %}text-secondary{% endif %}" 
+                               data-value="{{ i }}" style="cursor: pointer;"></i>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="rating" id="ratingValue" value="{{ form.rating.data or 0 }}">
+                        {% if form.rating.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.rating.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.comment.label(class="form-label") }}
+                        {{ form.comment(class="form-control", rows="4", placeholder="Share your experience (optional)") }}
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Submit Rating
+                        </button>
+                        <a href="{{ url_for('main.swap_requests') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle star rating selection
+    document.querySelectorAll('.rating-star').forEach(star => {
+        star.addEventListener('click', function() {
+            const value = this.getAttribute('data-value');
+            document.getElementById('ratingValue').value = value;
+            
+            // Update star display
+            document.querySelectorAll('.rating-star').forEach(s => {
+                if (s.getAttribute('data-value') <= value) {
+                    s.classList.add('text-warning');
+                    s.classList.remove('text-secondary');
+                } else {
+                    s.classList.add('text-secondary');
+                    s.classList.remove('text-warning');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
