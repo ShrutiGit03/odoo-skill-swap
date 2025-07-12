@@ -98,4 +98,4 @@ class AdminLog(db.Model):
     action = db.Column(db.String(50), nullable=False)  # 'user_banned', 'skill_approved', etc.
     target_id = db.Column(db.Integer)  # ID of affected user/skill
     details = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utccnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

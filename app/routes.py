@@ -5,9 +5,12 @@ from app.models import User, SkillOffered, SkillWanted, Availability, SwapReques
 from flask_login import login_user, current_user, logout_user, login_required
 from datetime import datetime
 from sqlalchemy import or_
+from flask import Blueprint
+from flask_login import current_user
+main = Blueprint('main', __name__)
 
-@app.route("/")
-@app.route("/home")
+@main.route('/')
+@main.route('/home')
 def home():
     if current_user.is_authenticated:
         users = User.query.filter(
