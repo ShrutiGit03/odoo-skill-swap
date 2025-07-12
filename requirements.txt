@@ -1,4 +1,23 @@
 flask
 flask_sqlalchemy
 flask_login
-flask_wtf
+flask_bcrypt
+flask_migrate
+# Additional dependencies
+Flask-WTF
+WTForms
+SQLAlchemy
+alembic
+bcrypt
+blinker
+click
+colorama
+itsdangerous
+Jinja2
+Mako
+MarkupSafe
+greenlet
+typing_extensions
+Werkzeug
+Pillow
+python-dotenv
