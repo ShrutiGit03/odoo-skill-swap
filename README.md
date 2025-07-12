@@ -6,7 +6,7 @@
 - Aarushi Sinha - aarushisinha0303@gmail.com
 
 ### Problem chosen
-Skill Swap Platform (Beginner‑friendly). See feature list in official brief.
+Skill Swap Platform. 
 
 ### about 
 “Up‑skill, give‑skill.” We help micro‑teams barter abilities (e.g., Photoshop ↔ Excel) instead of paying cash, dovetailing with Odoo’s Employee Skills & HR modules.
