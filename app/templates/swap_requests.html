@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Swap Requests{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Received Requests</h6>
+                <span class="badge bg-primary rounded-pill">{{ received_requests|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if received_requests %}
+                <div class="list-group">
+                    {% for request in received_requests %}
+                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 rounded">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('main.view_user', user_id=request.sender.id) }}" class="text-decoration-none">
+                                    <img src="{{ url_for('static', filename='profile_pics/' + request.sender.profile_pic) }}" 
+                                         width="30" height="30" class="rounded-circle me-1">
+                                    {{ request.sender.username }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">{{ request.created_at|time_ago }}</small>
+                        </div>
+                        <p class="mb-1 mt-2">
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-arrow-up-right"></i> {{ request.offered_skill.name }}
+                            </span>
+                            <i class="bi bi-arrow-left-right mx-2 text-muted"></i>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-arrow-down-left"></i> {{ request.wanted_skill.name }}
+                            </span>
+                        </p>
+                        {% if request.message %}
+                        <p class="mb-2 mt-2 text-muted"><small>"{{ request.message }}"</small></p>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-end mt-2">
+                            {% if request.status == 'pending' %}
+                            <form method="POST" action="{{ url_for('main.manage_swap', swap_id=request.id) }}" class="me-2">
+                                <input type="hidden" name="action" value="accept">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="bi bi-check-circle"></i> Accept
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('main.manage_swap', swap_id=request.id) }}">
+                                <input type="hidden" name="action" value="reject">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="bi bi-x-circle"></i> Reject
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="badge bg-{{ 'success' if request.status == 'accepted' else 'danger' if request.status == 'rejected' else 'warning' }}">
+                                {{ request.status|capitalize }}
+                            </span>
+                            {% if request.status == 'accepted' and not request.rating_given(current_user.id) %}
+                            <a href="{{ url_for('main.rate_swap', swap_id=request.id) }}" class="btn btn-sm btn-outline-primary ms-2">
+                                <i class="bi bi-star"></i> Rate
+                            </a>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No received swap requests yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-primary">Sent Requests</h6>
+                <span class="badge bg-primary rounded-pill">{{ sent_requests|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if sent_requests %}
+                <div class="list-group">
+                    {% for request in sent_requests %}
+                    <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 rounded">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('main.view_user', user_id=request.receiver.id) }}" class="text-decoration-none">
+                                    <img src="{{ url_for('static', filename='profile_pics/' + request.receiver.profile_pic) }}" 
+                                         width="30" height="30" class="rounded-circle me-1">
+                                    {{ request.receiver.username }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">{{ request.created_at|time_ago }}</small>
+                        </div>
+                        <p class="mb-1 mt-2">
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-arrow-up-right"></i> {{ request.offered_skill.name }}
+                            </span>
+                            <i class="bi bi-arrow-left-right mx-2 text-muted"></i>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-arrow-down-left"></i> {{ request.wanted_skill.name }}
+                            </span>
+                        </p>
+                        {% if request.message %}
+                        <p class="mb-2 mt-2 text-muted"><small>"{{ request.message }}"</small></p>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-end mt-2">
+                            {% if request.status == 'pending' %}
+                            <form method="POST" action="{{ url_for('main.manage_swap', swap_id=request.id) }}">
+                                <input type="hidden" name="action" value="cancel">
+                                <button type="submit" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-x-circle"></i> Cancel
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="badge bg-{{ 'success' if request.status == 'accepted' else 'danger' if request.status == 'rejected' else 'warning' }}">
+                                {{ request.status|capitalize }}
+                            </span>
+                            {% if request.status == 'accepted' and not request.rating_given(current_user.id) %}
+                            <a href="{{ url_for('main.rate_swap', swap_id=request.id) }}" class="btn btn-sm btn-outline-primary ms-2">
+                                <i class="bi bi-star"></i> Rate
+                            </a>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-send text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">No sent swap requests yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
