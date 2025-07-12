@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
 from app import db
 from app.models import User, SkillOffered, SkillWanted, SwapRequest, AdminLog
@@ -11,19 +11,14 @@ def dashboard():
     if not current_user.is_admin:
         abort(403)
     
-    # Get pending skills (both offered and wanted)
     pending_offered = SkillOffered.query.filter_by(is_approved=False).all()
     pending_wanted = SkillWanted.query.filter_by(is_approved=False).all()
     pending_skills = pending_offered + pending_wanted
     
-    # Get recent swaps (last 10)
     recent_swaps = SwapRequest.query.order_by(SwapRequest.created_at.desc()).limit(10).all()
     
-    # Get user stats
     total_users = User.query.count()
     banned_users = User.query.filter_by(is_active=False).count()
-    
-    # Get all users for management table
     all_users = User.query.all()
     
     return render_template('admin/dashboard.html',
@@ -47,7 +42,6 @@ def approve_skill(skill_id, skill_type):
     skill.is_approved = True
     db.session.commit()
     
-    # Log admin action
     log = AdminLog(
         admin_id=current_user.id,
         action=f'skill_approved_{skill_type}',
@@ -71,7 +65,6 @@ def reject_skill(skill_id, skill_type):
     else:
         skill = SkillWanted.query.get_or_404(skill_id)
     
-    # Log admin action before deletion
     log = AdminLog(
         admin_id=current_user.id,
         action=f'skill_rejected_{skill_type}',
@@ -95,7 +88,6 @@ def ban_user(user_id):
     user = User.query.get_or_404(user_id)
     user.is_active = False
     
-    # Log admin action
     log = AdminLog(
         admin_id=current_user.id,
         action='user_banned',
@@ -117,7 +109,6 @@ def unban_user(user_id):
     user = User.query.get_or_404(user_id)
     user.is_active = True
     
-    # Log admin action
     log = AdminLog(
         admin_id=current_user.id,
         action='user_unbanned',
@@ -140,10 +131,6 @@ def send_message(user_id):
     subject = request.form.get('subject')
     message = request.form.get('message')
     
-    # In a real app, you would send an email or notification here
-    # For now, we'll just log it
-    
-    # Log admin action
     log = AdminLog(
         admin_id=current_user.id,
         action='admin_message_sent',

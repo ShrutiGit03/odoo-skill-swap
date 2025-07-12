@@ -1,5 +1,5 @@
 from flask import render_template, url_for, flash, redirect, request, jsonify, abort
-from app import app, db, bcrypt
+from app import  db, bcrypt
 from app.forms import RegistrationForm, LoginForm, SkillForm, AvailabilityForm, RatingForm
 from app.models import User, SkillOffered, SkillWanted, Availability, SwapRequest, Rating
 from flask_login import login_user, current_user, logout_user, login_required
@@ -24,7 +24,7 @@ def home():
         return render_template('home.html', users=users)
     return render_template('home.html')
 
-@app.route("/register", methods=['GET', 'POST'])
+@main.route("/register", methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
@@ -43,7 +43,7 @@ def register():
         return redirect(url_for('login'))
     return render_template('auth/register.html', title='Register', form=form)
 
-@app.route("/login", methods=['GET', 'POST'])
+@main.route("/login", methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
@@ -58,12 +58,12 @@ def login():
             flash('Login Unsuccessful. Please check email and password', 'danger')
     return render_template('auth/login.html', title='Login', form=form)
 
-@app.route("/logout")
+@main.route("/logout")
 def logout():
     logout_user()
     return redirect(url_for('home'))
 
-@app.route("/profile", methods=['GET', 'POST'])
+@main.route("/profile", methods=['GET', 'POST'])
 @login_required
 def profile():
     skill_form = SkillForm()
@@ -106,7 +106,7 @@ def profile():
                          wanted_skills=current_user.skills_wanted,
                          availability=current_user.availability)
 
-@app.route("/search", methods=['GET'])
+@main.route("/search", methods=['GET'])
 @login_required
 def search():
     query = request.args.get('q', '')
@@ -131,7 +131,7 @@ def search():
     
     return render_template('search.html', results=results, query=query, skill_type=skill_type)
 
-@app.route("/user/<int:user_id>")
+@main.route("/user/<int:user_id>")
 @login_required
 def view_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -140,7 +140,7 @@ def view_user(user_id):
         return redirect(url_for('home'))
     return render_template('user_profile.html', user=user)
 
-@app.route("/request_swap", methods=['POST'])
+@main.route("/request_swap", methods=['POST'])
 @login_required
 def request_swap():
     data = request.get_json()
@@ -160,7 +160,7 @@ def request_swap():
     db.session.commit()
     return jsonify({'success': True, 'message': 'Swap request sent!'})
 
-@app.route("/manage_swap/<int:swap_id>", methods=['POST'])
+@main.route("/manage_swap/<int:swap_id>", methods=['POST'])
 @login_required
 def manage_swap(swap_id):
     swap = SwapRequest.query.get_or_404(swap_id)
@@ -178,14 +178,14 @@ def manage_swap(swap_id):
     db.session.commit()
     return redirect(url_for('swap_requests'))
 
-@app.route("/swap_requests")
+@main.route("/swap_requests")
 @login_required
 def swap_requests():
     sent = SwapRequest.query.filter_by(sender_id=current_user.id).all()
     received = SwapRequest.query.filter_by(receiver_id=current_user.id).all()
     return render_template('swap_requests.html', sent_requests=sent, received_requests=received)
 
-@app.route("/rate_swap/<int:swap_id>", methods=['GET', 'POST'])
+@main.route("/rate_swap/<int:swap_id>", methods=['GET', 'POST'])
 @login_required
 def rate_swap(swap_id):
     swap = SwapRequest.query.get_or_404(swap_id)
@@ -210,7 +210,7 @@ def rate_swap(swap_id):
     
     return render_template('rate_swap.html', form=form, swap=swap, other_user=other_user)
 
-@app.route("/api/user_skills/<int:user_id>/<skill_type>")
+@main.route("/api/user_skills/<int:user_id>/<skill_type>")
 @login_required
 def get_user_skills(user_id, skill_type):
     user = User.query.get_or_404(user_id)
@@ -222,14 +222,14 @@ def get_user_skills(user_id, skill_type):
     
     return jsonify({'skills': skills})
 
-@app.route("/toggle_profile_visibility", methods=['POST'])
+@main.route("/toggle_profile_visibility", methods=['POST'])
 @login_required
 def toggle_profile_visibility():
     current_user.is_public = not current_user.is_public
     db.session.commit()
     return jsonify({'success': True, 'is_public': current_user.is_public})
 
-@app.route("/delete_skill/<skill_type>/<int:skill_id>", methods=['POST'])
+@main.route("/delete_skill/<skill_type>/<int:skill_id>", methods=['POST'])
 @login_required
 def delete_skill(skill_type, skill_id):
     if skill_type == 'offer':
@@ -242,7 +242,7 @@ def delete_skill(skill_type, skill_id):
     flash('Skill deleted!', 'success')
     return redirect(url_for('profile'))
 
-@app.route("/delete_availability/<int:avail_id>", methods=['POST'])
+@main.route("/delete_availability/<int:avail_id>", methods=['POST'])
 @login_required
 def delete_availability(avail_id):
     avail = Availability.query.filter_by(id=avail_id, user_id=current_user.id).first_or_404()
@@ -251,15 +251,15 @@ def delete_availability(avail_id):
     flash('Availability removed!', 'success')
     return redirect(url_for('profile'))
 
-@app.errorhandler(403)
+@main.errorhandler(403)
 def forbidden_error(error):
     return render_template('errors/403.html'), 403
 
-@app.errorhandler(404)
+@main.errorhandler(404)
 def not_found_error(error):
     return render_template('errors/404.html'), 404
 
-@app.errorhandler(500)
+@main.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
     return render_template('errors/500.html'), 500
