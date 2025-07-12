@@ -10,3 +10,4 @@ db = SQLAlchemy(app)
 login = LoginManager(app)
 
 from app import routes  
+from app import models 
