@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Search Skills{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-body">
+                <form action="{{ url_for('main.search') }}" method="get" class="row g-2">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" name="q" value="{{ query }}" 
+                                   placeholder="Search for skills..." aria-label="Search skills">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="type">
+                            <option value="offer" {% if skill_type == 'offer' %}selected{% endif %}>Skills Offered</option>
+                            <option value="wanted" {% if skill_type == 'wanted' %}selected{% endif %}>Skills Wanted</option>
+                        </select>
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-primary w-100" type="submit">Go</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if results %}
+<div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for skill in results %}
+    <div class="col">
+        <div class="card skill-card h-100 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="card-title">{{ skill.name }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">
+                            <a href="{{ url_for('main.view_user', user_id=skill.user.id) }}" class="text-decoration-none">
+                                <img src="{{ url_for('static', filename='profile_pics/' + skill.user.profile_pic) }}" 
+                                     width="30" height="30" class="rounded-circle me-1">
+                                {{ skill.user.username }}
+                            </a>
+                            {% if skill.user.location %}
+                            <span class="badge bg-secondary ms-2">
+                                <i class="bi bi-geo-alt"></i> {{ skill.user.location }}
+                            </span>
+                            {% endif %}
+                        </h6>
+                    </div>
+                    <div class="text-end">
+                        {% if skill.user.ratings_received %}
+                        <div class="rating">
+                            {% for i in range(5) %}
+                                <i class="bi bi-star-fill rating-star {% if i < skill.user.get_avg_rating()|round %}text-warning{% else %}text-secondary{% endif %}"></i>
+                            {% endfor %}
+                            <small class="text-muted">({{ skill.user.ratings_received|length }})</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if skill.description %}
+                <p class="card-text mt-3">{{ skill.description }}</p>
+                {% endif %}
+                
+                {% if skill_type == 'offer' and skill.proficiency %}
+                <span class="badge bg-info">
+                    <i class="bi bi-award"></i> {{ skill.proficiency|capitalize }}
+                </span>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        {% for avail in skill.user.availability %}
+                        <span class="badge bg-light text-dark me-1">
+                            <i class="bi bi-calendar"></i> {{ avail.day }} {{ avail.time_range }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% if current_user.is_authenticated and current_user.id != skill.user.id %}
+                    <button class="btn btn-sm btn-outline-primary request-swap-btn" 
+                            data-user-id="{{ skill.user.id }}"
+                            data-skill-id="{{ skill.id }}"
+                            data-skill-type="{{ skill_type }}"
+                            data-bs-toggle="tooltip" data-bs-placement="top" title="Request Swap">
+                        <i class="bi bi-arrow-left-right"></i> Swap
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% elif query %}
+<div class="alert alert-info shadow">
+    <i class="bi bi-info-circle"></i> No results found for "{{ query }}"
+</div>
+{% else %}
+<div class="card shadow">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-search text-muted" style="font-size: 3rem;"></i>
+        <h4 class="text-muted mt-3">Search for skills to find potential swaps</h4>
+        <p class="text-muted">Try searching for skills like "Photoshop", "Excel", or "Guitar"</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Swap Request Modal -->
+<div class="modal fade" id="swapModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="bi bi-arrow-left-right"></i> Request Skill Swap</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="swapForm">
+                    <input type="hidden" id="receiverId">
+                    <input type="hidden" id="targetSkillId">
+                    <input type="hidden" id="targetSkillType">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">I want to swap my:</label>
+                        <select class="form-select" id="offeredSkill" required>
+                            <option value="">Select a skill...</option>
+                            {% for skill in current_user.skills_offered %}
+                            <option value="{{ skill.id }}">{{ skill.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">For their:</label>
+                        <select class="form-select" id="wantedSkill" required>
+                            <option value="">Select a skill...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Message (optional):</label>
+                        <textarea class="form-control" id="swapMessage" rows="3" placeholder="Add a personal message..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="submitSwapRequest">
+                    <i class="bi bi-send"></i> Send Request
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
