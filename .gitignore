@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.env
+.env
+venv/
+ENV/
+*.egg-info/
+*.egg
+*.sqlite3
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Environment
+.env*
+
+# Distribution / packaging
+build/
+dist/
+*.bak
+*.tmp
+
+# Git
+.git/
+
+# Others
+.DS_Store
+.idea/
+
+# Flask
+instance/
+*.db
+
+# Ignore requirements.txt lock files
+requirements*.txt.lock
